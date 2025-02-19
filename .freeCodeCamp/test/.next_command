@@ -78,3 +78,4 @@ chmod +x insert_data.sh
 git remote -v
 git branch
 git add .
+git add .
