@@ -389,3 +389,9 @@ __vsc_original_prompt_command=${PROMPT_COMMAND:-}
 psql --username=freecodecamp --dbname=postgres
 ./queries.sh
 ./queries.sh
+rm worldcup.sql
+pg_dump -cC --inserts -U freecodecamp worldcup > worldcup.sql
+git
+git status
+git remote -v
+git add .
