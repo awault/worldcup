@@ -11,20 +11,27 @@ fi
 
 # Read the teams from games.csv and insert unique team names into teams table
 cat games.csv | while IFS="," read YEAR ROUND WINNER OPPONENT WINNER_GOALS OPPONENT_GOALS
-  do
-    if [[ $WINNER != "winner" ]] # Skips header row
+do
+  if [[ $WINNER != "winner" ]] # Skips header row
+  then
+    # Insert winner team if it doesn't exist
+    WINNER_ID=$($PSQL "SELECT team_id FROM teams WHERE name='$WINNER'")
+    if [[ -z $WINNER_ID ]]
     then
-      # Insert name of winning team if it doesn't already exist
-      TEAM_ID=$($PSQL "SELECT team_id FROM teams WHERE name='$WINNER' " )
-      if [[ -z $TEAM_ID ]]
-      then
-        $PSQL "INSERT INTO teams(name) VALUES('$WINNER')"
-      fi
-      # Insert name of opponent if it doesn't already exist
-      TEAM_ID=$($PSQL "SELECT team_id FROM teams WHERE name='$OPPONENT' " )
-      if [[ -z $TEAM_ID ]]
-      then
-        $PSQL "INSERT INTO teams(name) VALUES('$OPPONENT')"
-      fi
+      $PSQL "INSERT INTO teams(name) VALUES('$WINNER')"
+      WINNER_ID=$($PSQL "SELECT team_id FROM teams WHERE name='$WINNER'") # Get new ID
     fi
-  done
+
+    # Insert opponent team if it doesn't exist
+    OPPONENT_ID=$($PSQL "SELECT team_id FROM teams WHERE name='$OPPONENT'")
+    if [[ -z $OPPONENT_ID ]]
+    then
+      $PSQL "INSERT INTO teams(name) VALUES('$OPPONENT')"
+      OPPONENT_ID=$($PSQL "SELECT team_id FROM teams WHERE name='$OPPONENT'") # Get new ID
+    fi
+
+    # Insert game data into games table
+    $PSQL "INSERT INTO games(year, round, winner_id, opponent_id, winner_goals, opponent_goals) 
+           VALUES($YEAR, '$ROUND', $WINNER_ID, $OPPONENT_ID, $WINNER_GOALS, $OPPONENT_GOALS)"
+  fi
+done
